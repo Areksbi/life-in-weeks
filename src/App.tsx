@@ -28,10 +28,7 @@ const getWeek = (date: Date) => {
 function App() {
   const [lifeExpectation, setLifeExpectation] = useState<number>(88);
   const [birthday, setBirthday] = useState<Date>(new Date());
-  const [availableHeight, setAvailableHeight] = useState(0);
-  const [availableWidth, setAvailableWidth] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
+  const [scale, setScale] = useState(0);
   const [windowWidth, windowHeight] = useWindowSize();
   const headerRef = useRef<HTMLElement>(document.createElement('header'));
   const tableRef = useRef<HTMLTableElement>(document.createElement('table'));
@@ -54,27 +51,22 @@ function App() {
     const externalHeight = windowHeight - headerRef.current.offsetHeight;
     const externalWidth = windowWidth;
 
-    setContentHeight(tableHeight);
-    setContentWidth(tableWidth);
-    setAvailableHeight(externalHeight);
-    setAvailableWidth(externalWidth);
+    setScale(Math.min(
+      externalWidth / tableWidth,
+      externalHeight / tableHeight
+    ));
   }, [birthday, lifeExpectation, windowWidth, windowHeight])
-
-  const scale = Math.min(
-    availableWidth / contentWidth,
-    availableHeight / contentHeight
-  )
 
   return (
     <main>
       <header ref={headerRef}>
         <h1>MY LIFE IN WEEKS</h1>
         <label>
-          Add your birth date:
+          Birthday:
           <input type="date" value={toDateInputValue(birthday)} onChange={(e: ChangeEvent<HTMLInputElement>) => setBirthday(e.target.valueAsDate ?? today)}/>
         </label>
         <label>
-          Add your life expectation:
+          Life expectation:
           <input type="number" value={lifeExpectation} onChange={(e: ChangeEvent<HTMLInputElement>) => setLifeExpectation(e.target.valueAsNumber ?? 0)}/>
         </label>
       </header>

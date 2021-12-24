@@ -37,3 +37,7 @@ table {
 th[colspan], th[rowspan] {
     font-size: 2rem;
 }
+
+th[rowspan] {
+    transform: rotate(270deg);
+}

@@ -40,7 +40,7 @@ function App() {
   const tableRef = useRef<HTMLTableElement>(document.createElement('table'));
 
   const additionalColumns = 2;
-  const weeksPerYear = 53;
+  const weeksPerYear = 52;
   const additionalColumnsArray = Array.from(Array(additionalColumns).keys());
   const weeksPerYearAsArray = Array.from(Array(weeksPerYear), (_, i: number) => i+1);
   const lifeExpectationAsArray = Array.from(Array(lifeExpectation).keys());
@@ -65,7 +65,7 @@ function App() {
     ));
   }, [birthday, lifeExpectation, windowWidth, windowHeight])
 
-  const getFilterByAge = (age: number) => {
+  const getColorByAge = (age: number) => {
     switch (true) {
       case age < 1:
         return '#ff6961';
@@ -83,6 +83,8 @@ function App() {
         return '#ffb347';
       case age > 65:
         return '#836953';
+      default:
+        return '#000000'
     }
   }
 
@@ -113,7 +115,7 @@ function App() {
             }
             {
               lifeExpectationAsArray.map((year: number, i: number) => (
-                <th key={i} scope={'col'}>
+                <th key={i} scope={'col'} style={{ paddingLeft: (year % 10 === 0) ? '0.5rem' : '' }}>
                   {
                     (year === 0) || (year % 5 === 0) ? year : ''
                   }
@@ -129,18 +131,22 @@ function App() {
                 {
                   i === 0 ? <th rowSpan={weeksPerYear}>WEEK</th> : ''
                 }
-                <th scope={'row'}>
+                <th scope={'row'} style={{ paddingBottom: (week % 4 === 0) ? '0.5rem' : '' }}>
                   {
-                    (week === 1) || (week % 5 === 0) ? week : ''
+                    (week === 1) || (week % 4 === 0) ? week : ''
                   }
                 </th>
                 {
                   lifeExpectationAsArray.map((year: number, j: number) => {
                     const isChecked = (year < years) || (year === years && week <= weeks);
+                    const style = {
+                      paddingBottom: (week % 4 === 0) ? '0.5rem' : '',
+                      paddingLeft: (year % 10 === 0) ? '0.5rem' : '',
+                    }
                     return (
-                      <td key={j}>
+                      <td key={j} style={style}>
                         <input type="checkbox" readOnly checked={isChecked}
-                               style={{backgroundColor: isChecked ? getFilterByAge(year) : ''}}
+                               style={{backgroundColor: isChecked ? getColorByAge(year) : ''}}
                         />
                       </td>
                     );

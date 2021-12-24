@@ -4,6 +4,12 @@ import {
 } from '@react-hook/window-size'
 import './App.css';
 
+const classNames = (classes: {[key: string]: string}) =>
+  Object.entries(classes)
+    .filter(([key, value]) => value)
+    .map(([key, value]) => key)
+    .join(' ')
+
 const toDateInputValue = (date: Date) => {
   const local = new Date(date);
   local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
@@ -33,7 +39,9 @@ function App() {
   const headerRef = useRef<HTMLElement>(document.createElement('header'));
   const tableRef = useRef<HTMLTableElement>(document.createElement('table'));
 
+  const additionalColumns = 2;
   const weeksPerYear = 53;
+  const additionalColumnsArray = Array.from(Array(additionalColumns).keys());
   const weeksPerYearAsArray = Array.from(Array(weeksPerYear), (_, i: number) => i+1);
   const lifeExpectationAsArray = Array.from(Array(lifeExpectation).keys());
 
@@ -46,10 +54,10 @@ function App() {
   const weeks = todayWeek - birthdayWeek;
 
   useEffect(() => {
-    const tableHeight = tableRef.current.offsetHeight;
-    const tableWidth = tableRef.current.offsetWidth;
-    const externalHeight = windowHeight - headerRef.current.offsetHeight;
-    const externalWidth = windowWidth;
+    const tableHeight = tableRef.current.scrollHeight;
+    const tableWidth = tableRef.current.scrollWidth;
+    const externalHeight = windowHeight;
+    const externalWidth = windowWidth - headerRef.current.offsetWidth;
 
     setScale(Math.min(
       externalWidth / tableWidth,
@@ -57,16 +65,37 @@ function App() {
     ));
   }, [birthday, lifeExpectation, windowWidth, windowHeight])
 
+  const getFilterByAge = (age: number) => {
+    switch (true) {
+      case age < 1:
+        return '#ff6961';
+      case age === 1:
+        return '#fdfd96';
+      case age >= 2 && age <= 6:
+        return '#77dd77';
+      case age > 6 && age <= 11:
+        return '#aec6cf';
+      case age > 11 && age <= 18:
+        return '#ffd1dc';
+      case age > 18 && age <= 39:
+        return '#b19cd9';
+      case age > 39 && age <= 65:
+        return '#ffb347';
+      case age > 65:
+        return '#836953';
+    }
+  }
+
   return (
     <main>
       <header ref={headerRef}>
         <h1>MY LIFE IN WEEKS</h1>
         <label>
-          Birthday:
+          <b>BIRTHDAY:</b>
           <input type="date" value={toDateInputValue(birthday)} onChange={(e: ChangeEvent<HTMLInputElement>) => setBirthday(e.target.valueAsDate ?? today)}/>
         </label>
         <label>
-          Life expectation:
+          <b>LIFE EXPECTATION:</b>
           <input type="number" value={lifeExpectation} onChange={(e: ChangeEvent<HTMLInputElement>) => setLifeExpectation(e.target.valueAsNumber ?? 0)}/>
         </label>
       </header>
@@ -74,12 +103,19 @@ function App() {
       <table ref={tableRef} style={{transform: `scale(${scale})`}}>
         <thead>
           <tr>
-            <td></td>
+            <th colSpan={lifeExpectation + additionalColumns}>AGE</th>
+          </tr>
+          <tr>
             {
-              weeksPerYearAsArray.map((week: number, j: number) => (
-                <th key={j} scope={'col'}>
+              additionalColumnsArray.map((_) => (
+                <td></td>
+              ))
+            }
+            {
+              lifeExpectationAsArray.map((year: number, i: number) => (
+                <th key={i} scope={'col'}>
                   {
-                    (week === 1) || (week % 5 === 0) ? week : ''
+                    (year === 0) || (year % 5 === 0) ? year : ''
                   }
                 </th>
               ))
@@ -88,19 +124,27 @@ function App() {
         </thead>
         <tbody>
           {
-            lifeExpectationAsArray.map((year: number, i: number) => (
+            weeksPerYearAsArray.map((week: number, i: number) => (
               <tr key={i}>
+                {
+                  i === 0 ? <th rowSpan={weeksPerYear}>WEEK</th> : ''
+                }
                 <th scope={'row'}>
                   {
-                    (year === 0) || (year % 5 === 0) ? year : ''
+                    (week === 1) || (week % 5 === 0) ? week : ''
                   }
                 </th>
                 {
-                  weeksPerYearAsArray.map((week: number, j: number) => (
-                    <td key={j}>
-                      <input type="checkbox" readOnly checked={(year < years) || (year === years && week <= weeks)}/>
-                    </td>
-                  ))
+                  lifeExpectationAsArray.map((year: number, j: number) => {
+                    const isChecked = (year < years) || (year === years && week <= weeks);
+                    return (
+                      <td key={j}>
+                        <input type="checkbox" readOnly checked={isChecked}
+                               style={{backgroundColor: isChecked ? getFilterByAge(year) : ''}}
+                        />
+                      </td>
+                    );
+                  })
                 }
               </tr>
             ))
@@ -109,58 +153,6 @@ function App() {
       </table>
     </main>
   );
-  // return (
-  //   <main>
-  //     <header ref={headerRef}>
-  //       <h1>5K WEEKS</h1>
-  //       <label>
-  //         Add your birth date:
-  //         <input type="date" value={toDateInputValue(birthday)} onChange={(e: ChangeEvent<HTMLInputElement>) => setBirthday(e.target.valueAsDate ?? today)}/>
-  //       </label>
-  //       <label>
-  //         Add your life expectation:
-  //         <input type="number" value={lifeExpectation} onChange={(e: ChangeEvent<HTMLInputElement>) => setLifeExpectation(e.target.valueAsNumber ?? 0)}/>
-  //       </label>
-  //     </header>
-  //
-  //     <table ref={tableRef} style={{transform: `scale(${scale})`}}>
-  //       <thead>
-  //         <tr>
-  //           <td></td>
-  //           {
-  //             lifeExpectationAsArray.map((year: number, i: number) => (
-  //               <th key={i} scope={'col'}>
-  //                 {
-  //                   (year === 0) || (year % 5 === 0) ? year : ''
-  //                 }
-  //               </th>
-  //             ))
-  //           }
-  //         </tr>
-  //       </thead>
-  //       <tbody>
-  //         {
-  //           weeksPerYearAsArray.map((week: number, i: number) => (
-  //             <tr key={i}>
-  //               <th scope={'row'}>
-  //                 {
-  //                   (week === 1) || (week % 5 === 0) ? week : ''
-  //                 }
-  //               </th>
-  //               {
-  //                 lifeExpectationAsArray.map((year: number, j: number) => (
-  //                   <td key={j}>
-  //                     <input type="checkbox" readOnly checked={(year < years) || (year === years && week <= weeks)}/>
-  //                   </td>
-  //                 ))
-  //               }
-  //             </tr>
-  //           ))
-  //         }
-  //       </tbody>
-  //     </table>
-  //   </main>
-  // );
 }
 
 export default App;

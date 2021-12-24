@@ -3,14 +3,37 @@
 /*}*/
 
 h1 {
+    font-size: 3rem;
     margin-top: 0;
 }
-table {
-    margin: 0 auto;
-    transform: scale(0.345);
-    transform-origin: top;
+
+header {
+    padding: 1rem;
+}
+
+input[type=checkbox i] {
+    appearance: none;
+    border: 1px solid black;
+    border-radius: 50%;
+    margin: 2px;
+    height: 13px;
+    width: 13px;
+}
+
+label input {
+    margin-bottom: 1rem;
 }
 
 main {
+    display: flex;
     max-height: 100vh;
+}
+
+table {
+    margin: 0 auto;
+    transform-origin: top left;
+}
+
+th[colspan], th[rowspan] {
+    font-size: 2rem;
 }

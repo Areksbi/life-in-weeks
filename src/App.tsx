@@ -31,11 +31,35 @@ const getWeek = (date: Date) => {
   return 1 + Math.ceil((firstThursday - target) / 604800000);
 }
 
-function App() {
+const getColorByAge = (age: number) => {
+  switch (true) {
+    case age < 1:
+      return '#ff6961';
+    case age === 1:
+      return '#fdfd96';
+    case age >= 2 && age <= 6:
+      return '#77dd77';
+    case age > 6 && age <= 11:
+      return '#aec6cf';
+    case age > 11 && age <= 18:
+      return '#ffd1dc';
+    case age > 18 && age <= 39:
+      return '#b19cd9';
+    case age > 39 && age <= 65:
+      return '#ffb347';
+    case age > 65:
+      return '#836953';
+    default:
+      return '#000000'
+  }
+}
+
+const App = () => {
   const [lifeExpectation, setLifeExpectation] = useState<number>(88);
   const [birthday, setBirthday] = useState<Date>(new Date());
   const [scale, setScale] = useState(0);
   const [windowWidth, windowHeight] = useWindowSize();
+  const [isVerticalScreen, setIsVerticalScreen] = useState<boolean>(windowHeight > windowWidth);
   const headerRef = useRef<HTMLElement>(document.createElement('header'));
   const tableRef = useRef<HTMLTableElement>(document.createElement('table'));
 
@@ -54,10 +78,14 @@ function App() {
   const weeks = todayWeek - birthdayWeek;
 
   useEffect(() => {
+    setIsVerticalScreen(windowHeight > windowWidth);
+  }, [windowHeight, windowWidth])
+
+  useEffect(() => {
     const tableHeight = tableRef.current.scrollHeight;
     const tableWidth = tableRef.current.scrollWidth;
-    const externalHeight = windowHeight;
-    const externalWidth = windowWidth - headerRef.current.offsetWidth;
+    const externalHeight = isVerticalScreen ? windowHeight - headerRef.current.offsetHeight : windowHeight;
+    const externalWidth = isVerticalScreen ? windowWidth : windowWidth - headerRef.current.offsetWidth;
 
     setScale(Math.min(
       externalWidth / tableWidth,
@@ -65,31 +93,14 @@ function App() {
     ));
   }, [birthday, lifeExpectation, windowWidth, windowHeight])
 
-  const getColorByAge = (age: number) => {
-    switch (true) {
-      case age < 1:
-        return '#ff6961';
-      case age === 1:
-        return '#fdfd96';
-      case age >= 2 && age <= 6:
-        return '#77dd77';
-      case age > 6 && age <= 11:
-        return '#aec6cf';
-      case age > 11 && age <= 18:
-        return '#ffd1dc';
-      case age > 18 && age <= 39:
-        return '#b19cd9';
-      case age > 39 && age <= 65:
-        return '#ffb347';
-      case age > 65:
-        return '#836953';
-      default:
-        return '#000000'
-    }
-  }
+  const colSpan = (isVerticalScreen ? weeksPerYear : lifeExpectation) + additionalColumns;
+  const xLabel = isVerticalScreen ? 'WEEK' : 'AGE';
+  const yLabel = isVerticalScreen ? 'AGE' : 'WEEK';
+  const headerValues = isVerticalScreen ? weeksPerYearAsArray : lifeExpectationAsArray;
+  const bodyValues = isVerticalScreen ? lifeExpectationAsArray : weeksPerYearAsArray;
 
   return (
-    <main>
+    <main style={{ display: isVerticalScreen ? '' : 'flex' }}>
       <header ref={headerRef}>
         <h1>MY LIFE IN WEEKS</h1>
         <label>
@@ -97,7 +108,7 @@ function App() {
           <input type="date" value={toDateInputValue(birthday)} onChange={(e: ChangeEvent<HTMLInputElement>) => setBirthday(e.target.valueAsDate ?? today)}/>
         </label>
         <label>
-          <b>LIFE EXPECTATION:</b>
+          <b>LIFE EXPECTANCY:</b>
           <input type="number" value={lifeExpectation} onChange={(e: ChangeEvent<HTMLInputElement>) => setLifeExpectation(e.target.valueAsNumber ?? 0)}/>
         </label>
       </header>
@@ -105,7 +116,7 @@ function App() {
       <table ref={tableRef} style={{transform: `scale(${scale})`}}>
         <thead>
           <tr>
-            <th colSpan={lifeExpectation + additionalColumns}>AGE</th>
+            <th colSpan={colSpan}>{xLabel}</th>
           </tr>
           <tr>
             {
@@ -114,51 +125,74 @@ function App() {
               ))
             }
             {
-              lifeExpectationAsArray.map((year: number, i: number) => (
-                <th key={i} scope={'col'} style={{ paddingLeft: (year % 10 === 0) ? '0.5rem' : '' }}>
-                  {
-                    (year === 0) || (year % 5 === 0) ? year : ''
-                  }
-                </th>
-              ))
+              headerValues.map((value: number, i: number) => {
+                const ratioSpaceBetweenCols = isVerticalScreen ? 4 : 10;
+                const checkIfDisplayValue = isVerticalScreen
+                  ? (value === 1) || (value % 4 === 0)
+                  : (value === 0) || (value % 5 === 0);
+                const style = {
+                  paddingLeft: (value % ratioSpaceBetweenCols === 0 && !isVerticalScreen) ? '0.5rem' : '',
+                  paddingRight: (value % ratioSpaceBetweenCols === 0 && isVerticalScreen) ? '0.5rem' : '',
+                }
+
+                return (
+                  <th key={i} scope={'col'} style={style}>
+                    {
+                      checkIfDisplayValue ? value : ''
+                    }
+                  </th>
+                );
+              })
             }
           </tr>
         </thead>
         <tbody>
           {
-            weeksPerYearAsArray.map((week: number, i: number) => (
-              <tr key={i}>
-                {
-                  i === 0 ? <th rowSpan={weeksPerYear}>WEEK</th> : ''
-                }
-                <th scope={'row'} style={{ paddingBottom: (week % 4 === 0) ? '0.5rem' : '' }}>
+            bodyValues.map((bodyValue: number, i: number) => {
+              const ratioSpaceBetweenRows = isVerticalScreen ? 10 : 4;
+              const checkIfDisplayValue = isVerticalScreen
+                ? (bodyValue === 0) || (bodyValue % 5 === 0)
+                : (bodyValue === 1) || (bodyValue % 4 === 0)
+
+              return (
+                <tr key={i}>
                   {
-                    (week === 1) || (week % 4 === 0) ? week : ''
+                    i === 0
+                      ? <th rowSpan={(isVerticalScreen ? lifeExpectation : weeksPerYear) + additionalColumns}>{yLabel}</th>
+                      : ''
                   }
-                </th>
-                {
-                  lifeExpectationAsArray.map((year: number, j: number) => {
-                    const isChecked = (year < years) || (year === years && week <= weeks);
-                    const style = {
-                      paddingBottom: (week % 4 === 0) ? '0.5rem' : '',
-                      paddingLeft: (year % 10 === 0) ? '0.5rem' : '',
+                  <th scope={'row'} style={{paddingBottom: (ratioSpaceBetweenRows % 4 === 0) ? '0.5rem' : ''}}>
+                    {
+                      checkIfDisplayValue ? bodyValue : ''
                     }
-                    return (
-                      <td key={j} style={style}>
-                        <input type="checkbox" readOnly checked={isChecked}
-                               style={{backgroundColor: isChecked ? getColorByAge(year) : ''}}
-                        />
-                      </td>
-                    );
-                  })
-                }
-              </tr>
-            ))
+                  </th>
+                  {
+                    headerValues.map((headerValue: number, j: number) => {
+                      const isChecked = isVerticalScreen
+                        ? (bodyValue < years) || (bodyValue === years && headerValue <= weeks)
+                        : (headerValue < years) || (headerValue === years && bodyValue <= weeks);
+                      const style = {
+                        paddingBottom: (bodyValue % 4 === 0 && !isVerticalScreen) || (isVerticalScreen && (bodyValue +  1) % 10 === 0) ? '0.5rem' : '',
+                        paddingLeft: (headerValue % 10 === 0 && !isVerticalScreen) ? '0.5rem' : '',
+                        paddingRight: (headerValue % 4 === 0 && isVerticalScreen) ? '0.5rem' : '',
+                      }
+                      return (
+                        <td key={j} style={style}>
+                          <input type="checkbox" readOnly checked={isChecked}
+                                 style={{backgroundColor: isChecked ? getColorByAge(isVerticalScreen ? bodyValue : headerValue) : ''}}
+                          />
+                        </td>
+                      );
+                    })
+                  }
+                </tr>
+              );
+            })
           }
         </tbody>
       </table>
     </main>
   );
-}
+};
 
 export default App;

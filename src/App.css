@@ -20,12 +20,19 @@ input[type=checkbox i] {
     width: 1rem;
 }
 
+label {
+    display: block;
+}
+
+label b {
+    margin-right: 1rem;
+}
+
 label input {
     margin-bottom: 1rem;
 }
 
 main {
-    display: flex;
     max-height: 100vh;
 }
 

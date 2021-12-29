@@ -84,7 +84,7 @@ const App = () => {
   useEffect(() => {
     const tableHeight = tableRef.current.scrollHeight;
     const tableWidth = tableRef.current.scrollWidth;
-    const externalHeight = isVerticalScreen ? windowHeight - headerRef.current.offsetHeight : windowHeight;
+    const externalHeight = windowHeight;
     const externalWidth = isVerticalScreen ? windowWidth : windowWidth - headerRef.current.offsetWidth;
 
     setScale(Math.min(

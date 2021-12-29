@@ -67,7 +67,7 @@ const App = () => {
   const weeksPerYear = 52;
   const additionalColumnsArray = Array.from(Array(additionalColumns).keys());
   const weeksPerYearAsArray = Array.from(Array(weeksPerYear), (_, i: number) => i+1);
-  const lifeExpectationAsArray = Array.from(Array(lifeExpectation).keys());
+  const lifeExpectationAsArray = Array.from(Array(lifeExpectation || 0).keys());
 
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -115,13 +115,11 @@ const App = () => {
 
       <table ref={tableRef} style={{transform: `scale(${scale})`}}>
         <thead>
-          <tr>
-            <th colSpan={colSpan}>{xLabel}</th>
-          </tr>
+          <tr><th colSpan={colSpan}>{xLabel}</th></tr>
           <tr>
             {
-              additionalColumnsArray.map((_) => (
-                <td></td>
+              additionalColumnsArray.map((_, i) => (
+                <td key={i}></td>
               ))
             }
             {
@@ -159,7 +157,7 @@ const App = () => {
                   {
                     i === 0
                       ? <th rowSpan={(isVerticalScreen ? lifeExpectation : weeksPerYear) + additionalColumns}>{yLabel}</th>
-                      : ''
+                      : null
                   }
                   <th scope={'row'} style={{paddingBottom: (ratioSpaceBetweenRows % 4 === 0) ? '0.5rem' : ''}}>
                     {
